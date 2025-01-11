@@ -1,21 +1,65 @@
+
 pipeline {
-  agent none
-  stages {
-    stage('Back-end') {
-      agent {
-        docker { image 'maven:3.8.1-adoptopenjdk-11' }
-      }
-      steps {
-        sh 'mvn --version'
-      }
+    agent any
+    
+    environment {
+        JAVA_IMAGE = "java-app"
+        NODE_IMAGE = "nodejs-app"
     }
-    stage('Front-end') {
-      agent {
-        docker { image 'node:16-alpine' }
-      }
-      steps {
-        sh 'node --version'
-      }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git 'https://github.com/venkykolli/jenkinsdocker.git'
+            }
+        }
+
+        stage('Build Java Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t $JAVA_IMAGE java-app/'
+                }
+            }
+        }
+
+        stage('Run Java Container') {
+            steps {
+                script {
+                    sh 'docker run --rm $JAVA_IMAGE'
+                }
+            }
+        }
+
+        stage('Build Node.js Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t $NODE_IMAGE nodejs-app/'
+                }
+            }
+        }
+
+        stage('Run Node.js Container') {
+            steps {
+                script {
+                    sh 'docker run -d -p 3000:3000 $NODE_IMAGE'
+                }
+            }
+        }
+
+        stage('Verify Node.js Server') {
+            steps {
+                script {
+                    sh 'curl -s http://localhost:3000'
+                }
+            }
+        }
     }
-  }
+
+    post {
+        always {
+            script {
+                sh 'docker ps -a'
+            }
+        }
+    }
 }

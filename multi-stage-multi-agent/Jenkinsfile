@@ -12,6 +12,10 @@ pipeline {
             steps {
                 git 'https://github.com/venkykolli/Jenkins-Zero-To-Hero.git'
             }
+             stage('mvn build') {
+               steps {
+                   sh 'clean package'
+            }
         }
 
         stage('Build Java Docker Image') {
